@@ -5,15 +5,15 @@ import json
 from pypdf import PdfReader
 import google.generativeai as genai
 
-# --- CONFIGURATION & SETUP ---
+
 st.set_page_config(page_title="Medical Note Analyzer & Policy Checker", layout="wide")
 
-# Set up your API Key
+
 API_KEY: str = "AIzaSyD5vCEN59Eh79ROciqOcNc0GzcdefBiWjw"
 if API_KEY != "AIzaSyD5vCEN59Eh79ROciqOcNc0GzcdefBiWjw":
     genai.configure(api_key=API_KEY)
 
-# --- THE AGENT CONSTITUTION ---
+
 COMPLIANCE_CONSTITUTION = """
 Act as a Healthcare Compliance Agent. Your rules are:
 - Accuracy First: If a clinical note is too vague to assign a specific ICD-10 code, do not guess. Output 'Ambiguous: Please clarify [X symptom].'
@@ -22,8 +22,6 @@ Act as a Healthcare Compliance Agent. Your rules are:
 - Policy Grounding: Only approve a claim if you find a direct match in the provided Policy Document.
 """
 
-
-# --- HELPER FUNCTIONS ---
 
 def extract_text_from_pdf(uploaded_file):
     """Extracts text from an uploaded PDF file."""
@@ -51,7 +49,6 @@ def pii_guardrail(text):
 def analyze_medical_note(text):
     """Uses LLM to summarize and extract keywords + evidence via JSON."""
     if API_KEY == "AIzaSyD5vCEN59Eh79ROciqOcNc0GzcdefBiWjw":
-        # Mock JSON response for offline testing
         mock_findings = [
             {"keyword": "pharyngitis",
              "evidence": "Patient presents with severe sore throat and red tonsils for 2 days."},
@@ -59,7 +56,6 @@ def analyze_medical_note(text):
         ]
         return "Patient presents with acute pharyngitis and a mild fever for 2 days.", mock_findings
 
-    # Initialize model with the Constitution
     model = genai.GenerativeModel(
         model_name='gemini-2.5-flash',
         system_instruction=COMPLIANCE_CONSTITUTION
@@ -95,20 +91,17 @@ def analyze_medical_note(text):
 def search_icd10(findings, csv_path="icd10_codes.csv"):
     """Searches local CSV for codes and appends the evidence from the note."""
     try:
-        # Mock database for the hackathon
         df = pd.DataFrame({
             "Code": ["J02.9", "R50.9", "E11.9", "I10"],
             "Description": ["Acute pharyngitis, unspecified", "Fever, unspecified", "Type 2 diabetes mellitus",
                             "Essential hypertension"]
         })
-        # If using a real CSV: df = pd.read_csv(csv_path)
 
         results = []
         for item in findings:
             kw = item.get("keyword", "")
             evidence = item.get("evidence", "")
 
-            # Skip if the LLM flagged it as ambiguous
             if "Ambiguous" in kw:
                 results.append({
                     "Code": "N/A",
@@ -141,7 +134,6 @@ def check_payer_policy(clinical_text, policy_text):
     if API_KEY == "AIzaSyD5vCEN59Eh79ROciqOcNc0GzcdefBiWjw":
         return False, "Symptoms do not meet the 3-day duration requirement in Section 2.1 of the policy. Note states symptoms present for 2 days."
 
-    # Initialize model with the Constitution
     model = genai.GenerativeModel(
         model_name='gemini-2.5-flash',
         system_instruction=COMPLIANCE_CONSTITUTION
@@ -176,8 +168,6 @@ def check_payer_policy(clinical_text, policy_text):
         return False, f"Error analyzing policy: {e}"
 
 
-# --- STREAMLIT UI ---
-
 st.title("🩺 AI Medical Note Analyzer & Policy Checker")
 st.markdown("Extract summaries, map ICD-10 codes with evidence, and verify against Payer Policies.")
 
@@ -202,10 +192,8 @@ if note_file is not None:
     if st.button("Analyze Note & Check Policy", type="primary"):
         with st.spinner("Analyzing with LLM..."):
 
-            # 1. LLM Analysis
             summary, findings = analyze_medical_note(raw_note_text)
 
-            # 2. Guardrail Check (Regex Backup)
             has_pii, pii_flags = pii_guardrail(summary)
 
             st.divider()
@@ -217,11 +205,9 @@ if note_file is not None:
             else:
                 st.success("✅ Guardrail Check Passed (No Raw PII Detected)")
 
-                # Summary
                 st.subheader("📝 Clinical Summary")
                 st.write(summary)
 
-                # ICD-10 Search & Table Generation
                 st.subheader("🏥 Suggested ICD-10 Codes with Evidence")
                 icd_results = search_icd10(findings)
 
@@ -230,7 +216,6 @@ if note_file is not None:
                 else:
                     st.write("No matching ICD-10 codes found or terms were too ambiguous.")
 
-                # 4. Policy Check (if policy file was uploaded)
                 if policy_file is not None:
                     st.divider()
                     st.subheader("🛡️ Payer Policy Adjudication")
