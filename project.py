@@ -9,8 +9,8 @@ import google.generativeai as genai
 st.set_page_config(page_title="Medical Note Analyzer & Policy Checker", layout="wide")
 
 
-API_KEY: str = "AIzaSyD5vCEN59Eh79ROciqOcNc0GzcdefBiWjw"
-if API_KEY != "AIzaSyD5vCEN59Eh79ROciqOcNc0GzcdefBiWjw":
+API_KEY: str = " "
+if API_KEY != " ":
     genai.configure(api_key=API_KEY)
 
 
@@ -48,7 +48,7 @@ def pii_guardrail(text):
 
 def analyze_medical_note(text):
     """Uses LLM to summarize and extract keywords + evidence via JSON."""
-    if API_KEY == "AIzaSyD5vCEN59Eh79ROciqOcNc0GzcdefBiWjw":
+    if API_KEY == " ":
         mock_findings = [
             {"keyword": "pharyngitis",
              "evidence": "Patient presents with severe sore throat and red tonsils for 2 days."},
